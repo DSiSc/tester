@@ -1,0 +1,431 @@
+---
+
+- config:
+    - testset: "justitia"
+
+#Transfer accounts
+#Returns the balance of the account of given address.
+- test:
+  - group: "Transaction"
+  - name: "eth_getBalance"
+  - url: "/"
+  - method: "POST"
+  - body: '{"jsonrpc":"2.0","method":"eth_getBalance","params":["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b", "latest"],"id":1}'
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 1}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+    - compare: {jsonpath_mini: "result", comparator: "eq", expected: "0x7fffffffffffffff"}
+#    - compare: {jsonpath_mini: "result", comparator: "regex", expected: '^0x[0-9a-zA-Z]+$'}
+  - extract_binds:
+    - 'Balance_id1': {'jsonpath_mini': 'result'}
+
+#Returns the balance of the account of given address.
+- test:
+  - group: "Transaction"
+  - name: "eth_getBalance"
+  - url: "/"
+  - method: "POST"
+  - body: '{"jsonrpc":"2.0","method":"eth_getBalance","params":["0xd46e8dd67c5d32be8058bb8eb970870f07244567", "latest"],"id":1}'
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 1}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+    - compare: {jsonpath_mini: "result", comparator: "eq", expected: "0x0"}
+  - extract_binds:
+    - 'Balance_id2': {'jsonpath_mini': 'result'}
+
+#Returns the current price per gas in wei.
+- test:
+  - group: "Transaction"
+  - name: "eth_gasPrice"
+  - url: "/"
+  - method: "POST"
+  - body: '{"jsonrpc":"2.0","method":"eth_gasPrice","params":[],"id":73}'
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 73}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+    - compare: {jsonpath_mini: "result", comparator: "eq", expected: "0x1"}
+  - extract_binds:
+    - 'GasPrice': {'jsonpath_mini': 'result'}
+
+#Generates and returns an estimate of how much gas is necessary to allow the transaction to complete.
+- test:
+  - group: "Transaction"
+  - name: "eth_estimateGas"
+  - url: "/"
+  - method: "POST"
+  - body: '{"jsonrpc":"2.0","method":"eth_estimateGas","params":[{"from": "0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b","to": "0xd46e8dd67c5d32be8058bb8eb970870f07244567","value": "0xDE0B6B3A7640000"}],"id":1}'
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 1}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+    - compare: {jsonpath_mini: "result", comparator: "eq", expected: "0x64"}
+  - extract_binds:
+    - 'TransactionGas': {'jsonpath_mini': 'result'}
+
+#Creates new message call transaction or a contract creation, if the data field contains code.
+- test:
+  - group: "Transaction"
+  - name: "eth_sendTransaction_transfer"
+  - url: "/"
+  - method: "POST"
+  - body: {template: '{"jsonrpc":"2.0","method":"eth_sendTransaction","params":[{"from": "0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b","to": "0xd46e8dd67c5d32be8058bb8eb970870f07244567","value": "0xDE0B6B3A7640000","gas": "$TransactionGas","gasPrice": "$GasPrice"}],"id":1}'}
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 1}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+    - compare: {jsonpath_mini: "result", comparator: "regex", expected: '^[0-9a-zA-Z]{66}$'}
+  - extract_binds:
+    - 'TransactionHash': {'jsonpath_mini': 'result'}
+
+#Returns the receipt of a transaction by transaction hash.
+- test:
+  - group: "Transaction"
+  - name: "eth_getTransactionReceipt"
+  - delay: 2
+  - url: "/"
+  - method: "POST"
+  - body: {template: '{"jsonrpc":"2.0","method":"eth_getTransactionReceipt","params":["$TransactionHash"],"id":1}'}
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 1}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+    - compare: {jsonpath_mini: "result.transactionHash", comparator: "eq", expected: {template: '$TransactionHash'}}
+    - compare: {jsonpath_mini: "result.blockHash", comparator: "regex", expected: '^[0-9a-zA-Z]{66}$'}
+#   - compare: {jsonpath_mini: "from", comparator: "eq", expected: "0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"}
+#   - compare: {jsonpath_mini: "to", comparator: "eq", expected: "0xd46e8dd67c5d32be8058bb8eb970870f07244567"}
+      #   - compare: {jsonpath_mini: "result.contractAddress", comparator: "eq", expected: "0x0000000000000000000000000000000000000000"}
+#   - compare: {jsonpath_mini: "result.gasUsed", comparator: "eq", expected: {template: '$TransactionGas'}}
+
+#Returns the balance of the account of given address.
+- test:
+  - group: "Transaction"
+  - name: "eth_getBalance"
+  - url: "/"
+  - method: "POST"
+  - body: '{"jsonrpc":"2.0","method":"eth_getBalance","params":["0xd46e8dd67c5d32be8058bb8eb970870f07244567", "latest"],"id":1}'
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 1}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+    - compare: {jsonpath_mini: 'result', comparator: 'eq', expected: '0xde0b6b3a7640000'}
+
+
+#Returns the balance of the account of given address.
+- test:
+  - group: "Transaction"
+  - name: "eth_getBalance"
+  - url: "/"
+  - method: "POST"
+  - body: '{"jsonrpc":"2.0","method":"eth_getBalance","params":["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b", "latest"],"id":1}'
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 1}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+    - compare: {jsonpath_mini: 'result', comparator: 'eq', expected: '0x721f494c589bffff'}
+
+#Contract
+#Generates and returns an estimate of how much gas is necessary to allow the transaction to complete.
+- test:
+  - group: "Transaction"
+  - name: "eth_estimateGas"
+  - url: "/"
+  - method: "POST"
+  - body: '{"jsonrpc":"2.0","method":"eth_estimateGas","params":[{"from": "0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b", "value": "0x0", "data": "0x608060405234801561001057600080fd5b506040805190810160405280600581526020017f48656c6c6f0000000000000000000000000000000000000000000000000000008152506000908051906020019061005c929190610062565b50610107565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f106100a357805160ff19168380011785556100d1565b828001600101855582156100d1579182015b828111156100d05782518255916020019190600101906100b5565b5b5090506100de91906100e2565b5090565b61010491905b808211156101005760008160009055506001016100e8565b5090565b90565b610410806101166000396000f300608060405260043610610057576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff168063a41368621461005c578063cfae3217146100c5578063ef690cc014610155575b600080fd5b34801561006857600080fd5b506100c3600480360381019080803590602001908201803590602001908080601f01602080910402602001604051908101604052809392919081815260200183838082843782019150505050505091929192905050506101e5565b005b3480156100d157600080fd5b506100da6101ff565b6040518080602001828103825283818151815260200191508051906020019080838360005b8381101561011a5780820151818401526020810190506100ff565b50505050905090810190601f1680156101475780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b34801561016157600080fd5b5061016a6102a1565b6040518080602001828103825283818151815260200191508051906020019080838360005b838110156101aa57808201518184015260208101905061018f565b50505050905090810190601f1680156101d75780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b80600090805190602001906101fb92919061033f565b5050565b606060008054600181600116156101000203166002900480601f0160208091040260200160405190810160405280929190818152602001828054600181600116156101000203166002900480156102975780601f1061026c57610100808354040283529160200191610297565b820191906000526020600020905b81548152906001019060200180831161027a57829003601f168201915b5050505050905090565b60008054600181600116156101000203166002900480601f0160208091040260200160405190810160405280929190818152602001828054600181600116156101000203166002900480156103375780601f1061030c57610100808354040283529160200191610337565b820191906000526020600020905b81548152906001019060200180831161031a57829003601f168201915b505050505081565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f1061038057805160ff19168380011785556103ae565b828001600101855582156103ae579182015b828111156103ad578251825591602001919060010190610392565b5b5090506103bb91906103bf565b5090565b6103e191905b808211156103dd5760008160009055506001016103c5565b5090565b905600a165627a7a72305820282ac517617e99c40cb097c074a231049f0660c748165998bebc7a66be5c683b0029"}],"id":1}'
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 1}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+  - extract_binds:
+    - 'DeployContractGas': {'jsonpath_mini': 'result'}
+
+
+#Creates new message call transaction or a contract creation, if the data field contains code.
+- test:
+  - group: "Transaction"
+  - name: "eth_sendTransaction_deploy"
+  - url: "/"
+  - method: "POST"
+  - body: {template: '{"jsonrpc":"2.0","method":"eth_sendTransaction","params":[{"from": "0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b","gas":"$DeployContractGas","value": "0x0","data": "0x608060405234801561001057600080fd5b506040805190810160405280600581526020017f48656c6c6f0000000000000000000000000000000000000000000000000000008152506000908051906020019061005c929190610062565b50610107565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f106100a357805160ff19168380011785556100d1565b828001600101855582156100d1579182015b828111156100d05782518255916020019190600101906100b5565b5b5090506100de91906100e2565b5090565b61010491905b808211156101005760008160009055506001016100e8565b5090565b90565b610410806101166000396000f300608060405260043610610057576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff168063a41368621461005c578063cfae3217146100c5578063ef690cc014610155575b600080fd5b34801561006857600080fd5b506100c3600480360381019080803590602001908201803590602001908080601f01602080910402602001604051908101604052809392919081815260200183838082843782019150505050505091929192905050506101e5565b005b3480156100d157600080fd5b506100da6101ff565b6040518080602001828103825283818151815260200191508051906020019080838360005b8381101561011a5780820151818401526020810190506100ff565b50505050905090810190601f1680156101475780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b34801561016157600080fd5b5061016a6102a1565b6040518080602001828103825283818151815260200191508051906020019080838360005b838110156101aa57808201518184015260208101905061018f565b50505050905090810190601f1680156101d75780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b80600090805190602001906101fb92919061033f565b5050565b606060008054600181600116156101000203166002900480601f0160208091040260200160405190810160405280929190818152602001828054600181600116156101000203166002900480156102975780601f1061026c57610100808354040283529160200191610297565b820191906000526020600020905b81548152906001019060200180831161027a57829003601f168201915b5050505050905090565b60008054600181600116156101000203166002900480601f0160208091040260200160405190810160405280929190818152602001828054600181600116156101000203166002900480156103375780601f1061030c57610100808354040283529160200191610337565b820191906000526020600020905b81548152906001019060200180831161031a57829003601f168201915b505050505081565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f1061038057805160ff19168380011785556103ae565b828001600101855582156103ae579182015b828111156103ad578251825591602001919060010190610392565b5b5090506103bb91906103bf565b5090565b6103e191905b808211156103dd5760008160009055506001016103c5565b5090565b905600a165627a7a72305820282ac517617e99c40cb097c074a231049f0660c748165998bebc7a66be5c683b0029"}],"id":1}'}
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 1}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+    - compare: {jsonpath_mini: "result", comparator: "regex", expected: '^[0-9a-zA-Z]{66}$'}
+  - extract_binds:
+    - 'DeployContractHash': {'jsonpath_mini': 'result'}
+
+#Returns the information about a transaction requested by transaction hash.
+- test:
+  - group: "Transaction"
+  - name: "eth_getTransactionByHash"
+  - delay: 2
+  - url: "/"
+  - method: "POST"
+  - body: {template: '{"jsonrpc":"2.0","method":"eth_getTransactionByHash","params":["$DeployContractHash"],"id":1}'}
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 1}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+    - compare: {jsonpath_mini: "result.blockHash", comparator: "regex", expected: '^[0-9a-zA-Z]{66}$'}
+    - compare: {jsonpath_mini: "result.from", comparator: "eq", expected: '0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b'}
+    - compare: {jsonpath_mini: "result.hash", comparator: "eq", expected: {template: '$DeployContractHash'}}
+    - compare: {jsonpath_mini: 'result.to', comparator: 'eq', expected: null}
+    - compare: {jsonpath_mini: "result.gas", comparator: "eq", expected: {template: '$DeployContractGas'}}
+
+
+#Returns the receipt of a transaction by transaction hash.
+- test:
+  - group: "Transaction"
+  - name: "eth_getTransactionReceipt"
+  - url: "/"
+  - method: "POST"
+  - body: {template: '{"jsonrpc":"2.0","method":"eth_getTransactionReceipt","params":["$DeployContractHash"],"id":1}'}
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 1}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+    - compare: {jsonpath_mini: "result.from", comparator: "eq", expected: '0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b'}
+    - compare: {jsonpath_mini: 'result.to', comparator: 'eq', expected: null}
+    - compare: {jsonpath_mini: "result.transactionHash", comparator: "eq", expected: {template: '$DeployContractHash'}}
+    - compare: {jsonpath_mini: "result.blockHash", comparator: "regex", expected: '^[0-9a-zA-Z]{66}$'}
+    - compare: {jsonpath_mini: "result.contractAddress", comparator: "regex", expected: '^[0-9a-zA-Z]{42}$'}
+  - extract_binds:
+    - 'ContractAddress': {'jsonpath_mini': 'result.contractAddress'}
+
+
+#Generates and returns an estimate of how much gas is necessary to allow the transaction to complete.
+- test:
+  - group: "Transaction"
+  - name: "eth_estimateGas"
+  - url: "/"
+  - method: "POST"
+  - body: {template: '{"jsonrpc":"2.0","method":"eth_estimateGas","params":[{"from": "0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b","to":"$ContractAddress","value":"0x0","data": "0xa413686200000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000"}],"id":1}'}
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 1}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+  - extract_binds:
+    - 'InvokeContractGas': {'jsonpath_mini': 'result'}
+
+
+#Creates new message call transaction or a contract creation, if the data field contains code.
+- test:
+  - group: "Transaction"
+  - name: "eth_sendTransaction_invoke"
+  - url: "/"
+  - method: "POST"
+  - body: {template: '{"jsonrpc":"2.0","method":"eth_sendTransaction","params":[{"from": "0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b","to":"$ContractAddress","gas":"$InvokeContractGas","value":"0x0","data": "0xa413686200000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000"}],"id":1}'}
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 1}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+    - compare: {jsonpath_mini: "result", comparator: "regex", expected: '^[0-9a-zA-Z]{66}$'}
+  - extract_binds:
+    - 'InvokeContractHash': {'jsonpath_mini': 'result'}
+
+
+#Returns the information about a transaction requested by transaction hash.
+- test:
+  - group: "Transaction"
+  - name: "eth_getTransactionByHash"
+  - delay: 2
+  - url: "/"
+  - method: "POST"
+  - body: {template: '{"jsonrpc":"2.0","method":"eth_getTransactionByHash","params":["$InvokeContractHash"],"id":1}'}
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 1}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+    - compare: {jsonpath_mini: "result.blockHash", comparator: "regex", expected: '^[0-9a-zA-Z]{66}$'}
+    - compare: {jsonpath_mini: "result.from", comparator: "eq", expected: '0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b'}
+    - compare: {jsonpath_mini: "result.hash", comparator: "eq", expected: {template: '$InvokeContractHash'}}
+    - compare: {jsonpath_mini: 'result.to', comparator: 'eq', expected: {template: '$ContractAddress'}}
+    - compare: {jsonpath_mini: "result.gas", comparator: "eq", expected: {template: '$InvokeContractGas'}}
+  - extract_binds:
+    - 'RecentBlockNumber_1': {'jsonpath_mini': 'result.blockNumber'}
+    - 'BlockHash': {'jsonpath_mini': 'result.blockHash'}
+    - 'BlockNumber': {'jsonpath_mini': 'result.blockNumber'}
+    - 'TransactionIndex': {'jsonpath_mini': 'result.transactionIndex'}
+
+
+#Returns the receipt of a transaction by transaction hash.
+- test:
+  - group: "Transaction"
+  - name: "eth_getTransactionReceipt"
+  - url: "/"
+  - method: "POST"
+  - body: {template: '{"jsonrpc":"2.0","method":"eth_getTransactionReceipt","params":["$InvokeContractHash"],"id":1}'}
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 1}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+    - compare: {jsonpath_mini: "result.from", comparator: "eq", expected: '0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b'}
+    - compare: {jsonpath_mini: 'result.to', comparator: 'eq', expected: {template: '$ContractAddress'}}
+    - compare: {jsonpath_mini: "result.transactionHash", comparator: "eq", expected: {template: '$InvokeContractHash'}}
+    - compare: {jsonpath_mini: "result.blockHash", comparator: "regex", expected: '^[0-9a-zA-Z]{66}$'}
+      #   - compare: {jsonpath_mini: "result.contractAddress", comparator: "eq", expected: '0x0000000000000000000000000000000000000000'}
+
+
+#Returns the number of most recent block.
+- test:
+  - group: "Transaction"
+  - name: "eth_blockNumber"
+  - url: "/"
+  - method: "POST"
+  - body: '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":83}'
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 83}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+    - compare: {jsonpath_mini: "result",comparator: "eq", expected: {template: '$RecentBlockNumber_1'}}
+
+
+#Returns information about a block by hash.
+- test:
+  - group: "Transaction"
+  - name: "eth_getBlockByHash"
+  - url: "/"
+  - method: "POST"
+  - body: {template: '{"jsonrpc":"2.0","method":"eth_getBlockByHash","params":["$BlockHash", true],"id":1}'}
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 1}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+    - compare: {jsonpath_mini: "result.number", comparator: "eq", expected: {template: '$BlockNumber'}}
+    - compare: {jsonpath_mini: "result.hash", comparator: "eq", expected: {template: '$BlockHash'}}
+    - compare: {jsonpath_mini: "result.parentHash", comparator: "regex", expected: '^[0-9a-zA-Z]{66}$'}
+    - compare: {jsonpath_mini: "result.transactionsRoot", comparator: "eq", expected: {template: '$InvokeContractHash'}}
+    - compare: {jsonpath_mini: "result.stateRoot", comparator: "regex", expected: '^[0-9a-zA-Z]{66}$'}
+    - compare: {jsonpath_mini: "result.receiptsRoot", comparator: "regex", expected: '^[0-9a-zA-Z]{66}$'}
+    - compare: {jsonpath_mini: "result.miner", comparator: "eq", expected: '0x333c3310824b7c685133f2bedb2ca4b8b4df633d'}
+      # - compare: {jsonpath_mini: {template: 'result.transactions.$TransactionIndex.hash'}, comparator: 'eq', expected: {template: '$InvokeContractHash'}}
+      # - extract_binds:
+      # - 'RecentBlockNumber': {'jsonpath_mini': 'result.number'}
+      # - 'blocktransaction': {'jmespath': "length(result.transactions)"}
+
+
+#Returns information about a block by block number.
+- test:
+  - group: "Transaction"
+  - name: "eth_getBlockByNumber"
+  - url: "/"
+  - method: "POST"
+  - body: {template: '{"jsonrpc":"2.0","method":"eth_getBlockByNumber","params":["$BlockNumber", true],"id":1}'}
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 1}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+    - compare: {jsonpath_mini: "result.number", comparator: "eq", expected: {template: '$BlockNumber'}}
+    - compare: {jsonpath_mini: "result.hash", comparator: "eq", expected: {template: '$BlockHash'}}
+    - compare: {jsonpath_mini: "result.parentHash", comparator: "regex", expected: '^[0-9a-zA-Z]{66}$'}
+    - compare: {jsonpath_mini: "result.transactionsRoot", comparator: "eq", expected: {template: '$InvokeContractHash'}}
+    - compare: {jsonpath_mini: "result.stateRoot", comparator: "regex", expected: '^[0-9a-zA-Z]{66}$'}
+    - compare: {jsonpath_mini: "result.receiptsRoot", comparator: "regex", expected: '^[0-9a-zA-Z]{66}$'}
+    - compare: {jsonpath_mini: "result.miner", comparator: "eq", expected: '0x333c3310824b7c685133f2bedb2ca4b8b4df633d'}
+      #- compare: {jsonpath_mini: 'result.transactions.0.hash', comparator: 'eq', expected: {template: '$InvokeContractHash'}}
+
+
+#Returns information about a transaction by block hash and transaction index position.
+- test:
+  - group: "Transaction"
+  - name: "eth_getTransactionByBlockHashAndIndex"
+  - url: "/"
+  - method: "POST"
+  - body: {template: '{"jsonrpc":"2.0","method":"eth_getTransactionByBlockHashAndIndex","params":["$BlockHash", "$TransactionIndex"],"id":1}'}
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 1}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+    - compare: {jsonpath_mini: "result.blockNumber", comparator: "eq", expected: {template: '$BlockNumber'}}
+    - compare: {jsonpath_mini: "result.blockHash", comparator: "eq", expected: {template: '$BlockHash'}}
+    - compare: {jsonpath_mini: "result.blockHash", comparator: "regex", expected: '^[0-9a-zA-Z]{66}$'}
+    - compare: {jsonpath_mini: "result.from", comparator: "regex", expected: '^[0-9a-zA-Z]{42}$'}
+    - compare: {jsonpath_mini: "result.to", comparator: "regex", expected: '^[0-9a-zA-Z]{42}$'}
+    - compare: {jsonpath_mini: 'result.hash', comparator: 'eq', expected: {template: '$InvokeContractHash'}}
+  - extract_binds:
+    - 'RecentBlockNumber_2': {'jsonpath_mini': 'result.blockNumber'}
+
+
+#Returns the number of most recent block.
+- test:
+  - group: "Transaction"
+  - name: "eth_blockNumber"
+  - url: "/"
+  - method: "POST"
+  - body: '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":83}'
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 83}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+    - compare: {jsonpath_mini: "result",comparator: "eq", expected: {template: '$RecentBlockNumber_2'}}
+
+
+#Returns information about a transaction by block number and transaction index position.
+- test:
+  - group: "Transaction"
+  - name: "eth_getTransactionByBlockNumberAndIndex"
+  - url: "/"
+  - method: "POST"
+  - body: {template: '{"jsonrpc":"2.0","method":"eth_getTransactionByBlockNumberAndIndex","params":["$BlockNumber", "$TransactionIndex"],"id":1}'}
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 1}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+    - compare: {jsonpath_mini: "result.blockHash", comparator: "regex", expected: '^[0-9a-zA-Z]{66}$'}
+    - compare: {jsonpath_mini: "result.from", comparator: "regex", expected: '^[0-9a-zA-Z]{42}$'}
+    - compare: {jsonpath_mini: "result.hash", comparator: "regex", expected: '^[0-9a-zA-Z]{66}$'}
+    - compare: {jsonpath_mini: "result.to", comparator: "regex", expected: '^[0-9a-zA-Z]{42}$'}
+    - compare: {jsonpath_mini: 'result.hash', comparator: 'eq', expected: {template: '$InvokeContractHash'}}
+  - extract_binds:
+    - 'RecentBlockNumber_3': {'jsonpath_mini': 'result.blockNumber'}
+
+
+#Returns the number of most recent block.
+- test:
+  - group: "Transaction"
+  - name: "eth_blockNumber"
+  - url: "/"
+  - method: "POST"
+  - body: '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":83}'
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 83}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+    - compare: {jsonpath_mini: "result",comparator: "eq", expected: {template: '$RecentBlockNumber_3'}}
+
+
+#Add
+#Returns the number of transactions sent from an address.
+- test:
+  - group: "Transaction"
+  - name: "eth_getTransactionCount"
+  - url: "/"
+  - method: "POST"
+  - body: '{"jsonrpc":"2.0","method":"eth_getTransactionCount","params":["0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b", "latest"],"id":1}'
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 1}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+    - compare: {jsonpath_mini: "result", comparator: "regex", expected: '^[0-9a-zA-Z]+$'}
+
+
+#Returns the number of transactions in a block from a block matching the given block hash.
+- test:
+  - group: "Transaction"
+  - name: "eth_getBlockTransactionCountByHash"
+  - url: "/"
+  - method: "POST"
+  - body: {template: '{"jsonrpc":"2.0","method":"eth_getBlockTransactionCountByHash","params":["$BlockHash"],"id":1}' }
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 1}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+      # - compare: {jsonpath_mini: "result", comparator: "type", expected: 'int'}
+      #   - compare: {jsonpath_mini: "result", comparator: "eq", expected: {template: "$blocktransaction"}}#与length有关
+  - extract_binds:
+    - 'count': {'jsonpath_mini': 'result'}
+
+
+
+#Returns the number of transactions in a block matching the given block number.
+- test:
+  - group: "Transaction"
+  - name: "eth_getBlockTransactionCountByNumber"
+  - url: "/"
+  - method: "POST"
+  - body: {template: '{"jsonrpc":"2.0","method":"eth_getBlockTransactionCountByNumber","params":["$BlockNumber"],"id":1}'}
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 1}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+    - compare: {jsonpath_mini: "result", comparator: "eq", expected: {template: '$count'}}
+
+
+#Returns code at a given address.
+- test:
+  - group: "Transaction"
+  - name: "eth_getCode"
+  - url: "/"
+  - method: "POST"
+  - body: {template: '{"jsonrpc":"2.0","method":"eth_getCode","params":["$ContractAddress", "$BlockNumber"],"id":1}'}
+  - validators:
+    - compare: {jsonpath_mini: "id", comparator: "eq", expected: 1}
+    - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
+    - compare: {jsonpath_mini: "result", comparator: "eq", expected: '0x608060405260043610610057576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff168063a41368621461005c578063cfae3217146100c5578063ef690cc014610155575b600080fd5b34801561006857600080fd5b506100c3600480360381019080803590602001908201803590602001908080601f01602080910402602001604051908101604052809392919081815260200183838082843782019150505050505091929192905050506101e5565b005b3480156100d157600080fd5b506100da6101ff565b6040518080602001828103825283818151815260200191508051906020019080838360005b8381101561011a5780820151818401526020810190506100ff565b50505050905090810190601f1680156101475780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b34801561016157600080fd5b5061016a6102a1565b6040518080602001828103825283818151815260200191508051906020019080838360005b838110156101aa57808201518184015260208101905061018f565b50505050905090810190601f1680156101d75780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b80600090805190602001906101fb92919061033f565b5050565b606060008054600181600116156101000203166002900480601f0160208091040260200160405190810160405280929190818152602001828054600181600116156101000203166002900480156102975780601f1061026c57610100808354040283529160200191610297565b820191906000526020600020905b81548152906001019060200180831161027a57829003601f168201915b5050505050905090565b60008054600181600116156101000203166002900480601f0160208091040260200160405190810160405280929190818152602001828054600181600116156101000203166002900480156103375780601f1061030c57610100808354040283529160200191610337565b820191906000526020600020905b81548152906001019060200180831161031a57829003601f168201915b505050505081565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f1061038057805160ff19168380011785556103ae565b828001600101855582156103ae579182015b828111156103ad578251825591602001919060010190610392565b5b5090506103bb91906103bf565b5090565b6103e191905b808211156103dd5760008160009055506001016103c5565b5090565b905600a165627a7a72305820282ac517617e99c40cb097c074a231049f0660c748165998bebc7a66be5c683b0029'}
