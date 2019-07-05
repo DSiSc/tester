@@ -57,7 +57,7 @@
   - validators:
     - compare: {jsonpath_mini: "id", comparator: "eq", expected: 1}
     - compare: {jsonpath_mini: "jsonrpc", comparator: "eq", expected: '2.0'}
-    - compare: {jsonpath_mini: "result", comparator: "eq", expected: "0x64"}
+    - compare: {jsonpath_mini: "result", comparator: "eq", expected: "0x5208"}
   - extract_binds:
     - 'TransactionGas': {'jsonpath_mini': 'result'}
 
